@@ -1,12 +1,22 @@
 #!/usr/bin/env sh
 
+TRAEFIK_HTTP_PORT=${TRAEFIK_HTTP_PORT:-"8080"}
+TRAEFIK_HTTPS_ENABLE=${TRAEFIK_HTTPS_ENABLE:-"false"}
+TRAEFIK_HTTPS_PORT=${TRAEFIK_HTTPS_PORT:-"8443"}
+TRAEFIK_ADMIN_PORT=${TRAEFIK_ADMIN_PORT:-"8000"}
+TRAEFIK_LOG_LEVEL=${TRAEFIK_LOG_LEVEL:-"INFO"}
+TRAEFIK_LOG_FILE=${TRAEFIK_LOG_FILE:-"${SERVICE_HOME}/log/traefik.log"}
+TRAEFIK_ACCESS_FILE=${TRAEFIK_ACCESS_FILE:-"${SERVICE_HOME}/log/access.log"}
+TRAEFIK_SSL_PATH=${TRAEFIK_SSL_PATH:-"${SERVICE_HOME}/certs"}
+TRAEFIK_ACME_ENABLE=${TRAEFIK_ACME_ENABLE:-"false"}
+TRAEFIK_ACME_EMAIL=${TRAEFIK_ACME_EMAIL:-"test@traefik.io"}
+TRAEFIK_ACME_ONDEMAND=${TRAEFIK_ACME_ONDEMAND:-"true"}
+
 TRAEFIK_ENTRYPOINTS_HTTP="\
   [entryPoints.http]
-  address = \":${TRAEFIK_HTTP_PORT}\"\
-
+  address = \":${TRAEFIK_HTTP_PORT}\"
 "
 
-# Check that you provide key/crt files and add them to the config
 filelist=`ls -1 ${TRAEFIK_SSL_PATH}/*.key | cut -d"." -f1`
 RC=`echo $?`
 
@@ -20,7 +30,8 @@ if [ $RC -eq 0 ]; then
             TRAEFIK_ENTRYPOINTS_HTTPS=$TRAEFIK_ENTRYPOINTS_HTTPS"
       [[entryPoints.https.tls.certificates]]
       certFile = \"${i}.crt\"
-      keyFile = \"${i}.key\""
+      keyFile = \"${i}.key\"
+"
         fi
     done
 fi
@@ -29,8 +40,12 @@ if [ "X${TRAEFIK_HTTPS_ENABLE}" == "Xtrue" ]; then
     TRAEFIK_ENTRYPOINTS_OPTS=${TRAEFIK_ENTRYPOINTS_HTTP}${TRAEFIK_ENTRYPOINTS_HTTPS}
     TRAEFIK_ENTRYPOINTS='"http", "https"'
 elif [ "X${TRAEFIK_HTTPS_ENABLE}" == "Xonly" ]; then
-    TRAEFIK_ENTRYPOINTS_OPTS=${TRAEFIK_ENTRYPOINTS_HTTPS}
-    TRAEFIK_ENTRYPOINTS='"https"'
+    TRAEFIK_ENTRYPOINTS_HTTP=$TRAEFIK_ENTRYPOINTS_HTTP"\
+    [entryPoints.http.redirect]
+       entryPoint = \"https\"
+"
+    TRAEFIK_ENTRYPOINTS_OPTS=${TRAEFIK_ENTRYPOINTS_HTTP}${TRAEFIK_ENTRYPOINTS_HTTPS}
+    TRAEFIK_ENTRYPOINTS='"http", "https"'
 else 
     TRAEFIK_ENTRYPOINTS_OPTS=${TRAEFIK_ENTRYPOINTS_HTTP}
     TRAEFIK_ENTRYPOINTS='"http"'
@@ -49,7 +64,6 @@ entryPoint = \"https\"
 "
 
 fi
-
 
 cat << EOF > ${SERVICE_HOME}/etc/traefik.toml
 # traefik.toml

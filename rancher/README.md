@@ -14,7 +14,7 @@
 - https_enable = <false | true | only>
   - false: Enable http enpoints and disable https ones.
   - true: Enable http and https endpoints.
-  - only: Disable http endpoints and enable https ones.
+  - only: Enable https endpoints and redirect http to https.
 - acme_enable = false 				# Enable/Disable acme traefik support.
 - acme_email = "test@traefik.io" 	# acme user email
 - acme_ondemand = true 				# acme ondemand parameter.
@@ -32,6 +32,7 @@ Traefik labels has to be added in your services, in order to get included in tra
   - false: the service will not be published
 - traefik.domain = < domain names to route rule. Multiple values separated by "," > 
 - traefik.port = < port to expose throught traefik >  
+- traefik.acme = < true | false >	# Enable/disable ACME traefik feature
  
 ### Usage:
 

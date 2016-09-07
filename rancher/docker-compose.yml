@@ -1,8 +1,8 @@
 traefik:
   ports:
   - ${admin_port}:8000/tcp
-  - ${http_port}:8080/tcp
-  - ${https_port}:8443/tcp
+  - ${http_port}:${http_port}/tcp
+  - ${https_port}:${https_port}/tcp
   log_driver: ''
   labels:
     io.rancher.scheduler.global: 'true'
@@ -12,9 +12,11 @@ traefik:
     io.rancher.container.hostname_override: container_name
   tty: true
   log_opt: {}
-  image: rawmind/alpine-traefik:1.0.2-2
+  image: rawmind/alpine-traefik:1.0.2-6
   environment:
   - CONF_INTERVAL=${refresh_interval}
+  - TRAEFIK_HTTP_PORT=${http_port}
+  - TRAEFIK_HTTPS_PORT=${https_port}
   - TRAEFIK_HTTPS_ENABLE=${https_enable}
   - TRAEFIK_ACME_ENABLE=${acme_enable}
   - TRAEFIK_ACME_EMAIL=${acme_email}
@@ -30,7 +32,7 @@ traefik-conf:
     io.rancher.container.start_once: 'true'
   tty: true
   log_opt: {}
-  image: rawmind/rancher-traefik:0.3.4-4
+  image: rawmind/rancher-traefik:0.3.4-6
   net: none
   volumes:
     - /opt/tools
